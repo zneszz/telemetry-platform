@@ -1,0 +1,42 @@
+services:
+  postgres:
+    image: postgres:latest
+    environment:
+      POSTGRES_USER: telemetry
+      POSTGRES_PASSWORD: telemetry
+      POSTGRES_DB: telemetry
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./init:/docker-entrypoint-initdb.d
+
+  redis:
+    image: redis:latest 
+    ports:
+      - "6379:6479"
+
+  generator:
+    build:
+      context: .
+      dockerfile: generator/Dockerfile
+    depends_on:
+      - redis
+
+  processor:
+    build:
+      context: .
+      dockerfile: processor/Dockerfile
+    depends_on:
+      - redis
+  
+  grafana:
+    image: grafana/grafana:latest
+    ports:
+      - "3000:3000"
+    depends_on:
+      - postgres
+    volumes:
+      - grafana-data:/var/lib/grafana
+
+volumes:
+  grafana-data:
